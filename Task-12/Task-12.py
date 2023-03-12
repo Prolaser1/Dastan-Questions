@@ -130,15 +130,11 @@ class Dastan:
     def __CountNormalPieces(self):
         pieces = 0
         for Square in self._Board:
-            piece = Square.GetPieceInSquare()
-            PlayerPiece = Square.GetBelongsTo()
-            PieceType = Square.GetTypeOfPiece()
-    
-            if piece is not None and PlayerPiece == self._CurrentPlayer and PieceType == 'piece':
-                pieces+=1
-        print(pieces, self._NoOfRows)
+            Piece = Square.GetPieceInSquare()
+            if Piece != None:
+                if Piece.GetBelongsTo().SameAs(self._CurrentPlayer) and Piece.GetTypeOfPiece() == 'piece':
+                    pieces += 1
         return pieces
-    
 
     def __CheckReincarnation(self, FinishSquareReference):
         rowVal = 10
@@ -148,11 +144,14 @@ class Dastan:
             rowVal=self._NoOfRows*10
             backrow=str(self._NoOfRows)
             value = "!"
-        if str(FinishSquareReference).split()[0] == backrow and self.__CountNormalPieces() < self._NoOfPieces:
+            
+        if str(FinishSquareReference).split()[0][1] == backrow and self.__CountNormalPieces() < self._NoOfPieces:
             PieceCol= int(input('You are allowed to reincarnate a piece \nSelect a coloumn on your back row to reincarntate into'))
-            while self._Board[self.__GetIndexOfSquare(rowVal+PieceCol)] is not None:
+            
+            while self._Board[self.__GetIndexOfSquare(rowVal+PieceCol)].GetPieceInSquare() is not None:
                 print('Error - Sqaure must be empty')
                 PieceCol= int(input('You are allowed to reincarnate a piece \nSelect a coloumn on your back row to reincarntate into'))
+                
             self._Board[self.__GetIndexOfSquare(rowVal+PieceCol)].SetPiece(Piece("piece", self._CurrentPlayer, 1, value))
             
             
@@ -214,12 +213,6 @@ class Dastan:
                 self._Board.append(S)
 
     def __CreatePieces(self, NoOfPieces):
-        NoOfPieces = 2
-        self._Board[self.__GetIndexOfSquare(51)].SetPiece(Piece("piece", self._Players[0], 1, "!"))
-        self._Board[self.__GetIndexOfSquare(21)].SetPiece(Piece("piece", self._Players[1], 1, '"'))
-        self._Board[self.__GetIndexOfSquare(54)].SetPiece(Piece("piece", self._Players[1], 1, '"'))
-        
-        
         for Count in range(1, NoOfPieces + 1):
             CurrentPiece = Piece("piece", self._Players[0], 1, "!")
             self._Board[self.__GetIndexOfSquare(2 * 10 + Count + 1)].SetPiece(CurrentPiece)
