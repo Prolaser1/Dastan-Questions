@@ -128,30 +128,32 @@ class Dastan:
         return 0
 
     def __CalculateSahmMove(self, StartSqaureReference):
-        Direction = self._CurrentPlayer.__Direction
-        StartRow = int(StartSqaureReference.split()[0])
-        StartCol = int(StartSqaureReference.split()[1])
+        StartRow = StartSqaureReference // 10
+        StartCol = StartSqaureReference % 10
         Points=0
         #Player1
         if self._CurrentPlayer.SameAs(self._Players[0]):
             endrow = 6
             while StartRow < endrow:
                 RowCol = int(str(StartRow)+str(StartCol))
-                if self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare() is not None and self._Board[self.__GetIndexOfSquare(RowCol)].ContainKotla() == False:
-                    Points += self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare().GetPointsForCapture()
-                    self._Board[self.__GetIndexOfSquare(RowCol)].RemovePiece()
+                if self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare() is not None and self._Board[self.__GetIndexOfSquare(RowCol)].ContainsKotla() == False:
+                    if self._CurrentPlayer.SameAs(self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare().GetBelongsTo()) == False:
+                        Points += self.__CalculatePieceCapturePoints(RowCol)
+                        self._Board[self.__GetIndexOfSquare(RowCol)].RemovePiece()
                 StartRow += 1
         #Player2
         else:
             endrow = 1
             while StartRow > endrow:
                 RowCol = int(str(StartRow)+str(StartCol))
-                if self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare() is not None and self._Board[self.__GetIndexOfSquare(RowCol)].ContainKotla() == False:
-                    Points += self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare().GetPointsForCapture()
-                    self._Board[self.__GetIndexOfSquare(RowCol)].RemovePiece()
+                if self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare() is not None and self._Board[self.__GetIndexOfSquare(RowCol)].ContainsKotla() == False:
+                    if self._Board[self.__GetIndexOfSquare(RowCol)].GetPieceInSquare().GetBelongsTo().SameAs(self._CurrentPlayer) == False:
+                        Points += self.__CalculatePieceCapturePoints(RowCol)
+                        self._Board[self.__GetIndexOfSquare(RowCol)].RemovePiece()
                 StartRow -= 1
         self.__UpdatePlayerScore(Points)
-        self._CurrentPlayer.SetSahmUsed(True)
+        print("New score: " + str(self._CurrentPlayer.GetScore()) + "\n")
+        self._CurrentPlayer.SahmUsed = True
                 
         
 
@@ -228,16 +230,19 @@ class Dastan:
         self._Board[self.__GetIndexOfSquare(self._NoOfRows * 10 + (self._NoOfColumns // 2 + 1))].SetPiece(CurrentPiece)
 
     def __CreateMoveOptionOffer(self):
+        self._MoveOptionOffer.append("Sahm")
         self._MoveOptionOffer.append("jazair")
         self._MoveOptionOffer.append("chowkidar")
         self._MoveOptionOffer.append("cuirassier")
         self._MoveOptionOffer.append("ryott")
         self._MoveOptionOffer.append("faujdar")
-        self._MoveOptionOffer.append("Sahm")
+        
     
     def __CreateSahmMoveOption(self, Direction):
-        RowCol = self.__GetSquareReference('chosen for Sahm')
+        NewMoveOption=MoveOption('Sahm')
         NewMove = Move(0,0)
+        NewMoveOption.AddToPossibleMoves(NewMove)
+        return NewMoveOption
 
     def __CreateRyottMoveOption(self, Direction):
         NewMoveOption = MoveOption("ryott")
@@ -329,14 +334,11 @@ class Dastan:
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("cuirassier", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("faujdar", 1))
         self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("jazair", 1))
-        self._Players[0].AddToMoveOptionQueue(self.__CreateMoveOption("Sahm", 1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("ryott", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("chowkidar", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("jazair", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("faujdar", -1))
         self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("cuirassier", -1))
-        self._Players[1].AddToMoveOptionQueue(self.__CreateMoveOption("Sahm", -1))
-
 class Piece:
     def __init__(self, T, B, P, S):
         self._TypeOfPiece = T
@@ -481,8 +483,9 @@ class Player:
         self.SahmUsed = Bool
     
     def ChoiceIsSahm(self, Choice):
-        if self.__Queue.GetMoveOptionInPosition(Choice).GetName() == 'Sahm':
+        if self.__Queue.GetMoveOptionInPosition(Choice-1).GetName() == 'Sahm':
             return True
+        return False
         
     def SameAs(self, APlayer):
         if APlayer is None:
